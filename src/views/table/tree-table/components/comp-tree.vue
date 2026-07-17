@@ -1,0 +1,95 @@
+<template>
+    <div class="table-tree-left">
+        <div class="header-box">
+            <h2>部门管理</h2>
+            <!-- <el-input
+                v-model="input"
+                placeholder="请输入内容"
+                @input="searchData(true)"
+            ></el-input> -->
+        </div>
+        <div class="list system-scrollbar">
+            <el-tree
+                ref="elTreeRef"
+                class="my-tree"
+                :data="treeData"
+                :props="defaultProps"
+                :expand-on-click-node="false"
+                node-key="id"
+                highlight-current
+                default-expand-all
+                @node-click="handleNodeClick"
+            >
+                <template #default="{ node, data }">
+                    <div flex="~ items-center">
+                        <span>{{ node.label }}</span>
+                        <el-link class="ml-5px" :icon="Edit" circle @click.stop="handleEdit(data)"></el-link>
+                    </div>
+                </template>
+            </el-tree>
+        </div>
+        <dialog-tree-modify
+            v-if="layer.show"
+            v-model="layer"
+            @update="(payload: boolean) => (layer.show = payload)"
+            @get-table-data="getTreeData"
+        />
+    </div>
+</template>
+
+<script lang="ts" setup>
+import type { GlobalDialogLayer } from '~/types/components.types'
+import type { TreeInstance } from '~/types/global.types'
+
+import type { IDeptList, ITree } from '~/types/table.types'
+import { Edit } from '@element-plus/icons-vue'
+
+defineOptions({
+    name: 'CompTree',
+    inheritAttrs: true,
+})
+
+const treeData = ref<ITree[]>([])
+const elTreeRef = useTemplateRef<TreeInstance>('treeRef')
+
+const defaultProps = {
+    children: 'children',
+    label: 'label',
+}
+
+const activeTree = inject(activeTreeKey, ref({} as ITree))
+const updateActiveTree = inject(updateActiveTreeKey, () => {})
+
+async function getTreeData() {
+    const params = {}
+    const { code, data } = await $api.post<ITree[]>('/table/tree', params)
+    if (code === 200) {
+        treeData.value = data
+        updateActiveTree(data[0])
+        nextTick(() => {
+            elTreeRef.value && elTreeRef.value.setCurrentKey(activeTree.value.id)
+        })
+    }
+}
+function handleNodeClick(row: ITree) {
+    updateActiveTree(row)
+}
+
+// 弹窗控制器
+const layer: GlobalDialogLayer<IDeptList> = reactive({
+    show: false,
+    title: '新增',
+    showButton: true,
+    disabledBtn: false,
+    loadingBtn: false,
+    width: '500px',
+})
+
+function handleEdit(row: IDeptList) {
+    layer.title = '编辑数据'
+    layer.row = row
+    layer.show = true
+}
+
+getTreeData()
+</script>

@@ -1,0 +1,138 @@
+<template>
+    <global-dialog
+        ref="layerDom"
+        :layer="layer"
+        @update="onUpdate"
+        @confirm="onSubmit"
+    >
+        <el-form
+            ref="ruleForm"
+            :model="form"
+            :rules="rules"
+            label-width="6em"
+            class=""
+        >
+            <el-form-item label="名称：" prop="name">
+                <el-input v-model="form.name" placeholder="请输入名称" />
+            </el-form-item>
+            <el-form-item label="数字：" prop="number">
+                <el-input
+                    v-model="form.number"
+                    oninput="value=value.replace(/[^\d]/g,'')"
+                    placeholder="只能输入正整数"
+                />
+            </el-form-item>
+            <el-form-item label="选择器：" prop="select">
+                <el-select v-model="form.choose" placeholder="请选择" clearable>
+                    <el-option
+                        v-for="item in selectData"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value"
+                    />
+                </el-select>
+            </el-form-item>
+            <el-form-item label="单选框：" prop="radio">
+                <el-radio-group v-model="form.radio">
+                    <el-radio
+                        v-for="item in radioData"
+                        :key="item.value"
+                        :value="item.value"
+                    >
+                        {{ item.label }}
+                    </el-radio>
+                </el-radio-group>
+            </el-form-item>
+        </el-form>
+    </global-dialog>
+</template>
+
+<script lang="ts" setup>
+import type { FormInstance, FormItemRule } from 'element-plus'
+import type { GlobalDialogLayer } from '~/types/components.types'
+import type { GlobalDialogInstance } from '~/types/global.types'
+import type { ITableList } from '~/types/table.types'
+
+import Rules from '@lincy/async-validation'
+
+import { ElMessage } from '~/config/element'
+import { radioData, selectData } from '~/views/table/enum'
+
+defineOptions({
+    name: 'DialogModify',
+})
+
+const emit = defineEmits(['getTableData', 'update'])
+
+const layer = defineModel<GlobalDialogLayer<Nullable<ITableList>>>({ required: true })
+
+const ruleForm = useTemplateRef<FormInstance>('ruleForm')
+// @ts-ignore 忽略未使用变量
+const layerDom = useTemplateRef<GlobalDialogInstance>('layerDom')
+
+let form = $ref<ITableList>({
+    id: undefined,
+    name: undefined,
+    number: undefined,
+    choose: undefined,
+    radio: undefined,
+})
+const rules = {
+    name: Rules.string('姓名') as FormItemRule[],
+    number: Rules.integer('数字') as FormItemRule[],
+    choose: Rules.select('选择器') as FormItemRule[],
+    radio: Rules.select('单选框') as FormItemRule[],
+}
+
+function onSubmit() {
+    if (ruleForm.value) {
+        ruleForm.value.validate((valid) => {
+            if (valid) {
+                if (layer.value.row) {
+                    updateForm(form)
+                }
+                else {
+                    addForm(form)
+                }
+            }
+        })
+    }
+}
+// 新增提交事件
+async function addForm(params: ITableList) {
+    layer.value.loadingBtn = true
+    const { code } = await $api.post('/table/add', params)
+    if (code === 200) {
+        ElMessage({
+            type: 'success',
+            message: '新增成功',
+        })
+        emit('getTableData', true)
+        onUpdate(false)
+    }
+    layer.value.loadingBtn = false
+}
+// 编辑提交事件
+async function updateForm(params: ITableList) {
+    layer.value.loadingBtn = true
+    const { code } = await $api.post('/table/update', params)
+    if (code === 200) {
+        ElMessage({
+            type: 'success',
+            message: '编辑成功',
+        })
+        emit('getTableData', false)
+        onUpdate(false)
+    }
+    layer.value.loadingBtn = false
+}
+function onUpdate(payload: boolean) {
+    emit('update', payload)
+}
+
+watchEffect(() => {
+    if (layer.value.row) {
+        form = deepClone(layer.value.row)
+    }
+})
+</script>
