@@ -6,8 +6,8 @@
   "packageManager": "pnpm@11.5.2",
   "sideEffects": false,
   "scripts": {
-    "serve": "cross-env DEBUG=vite:transform vite",
-    "serve:bun": "bunx --bun vite",
+    "dev": "cross-env DEBUG=vite:transform vite --mode development",
+    "dev:bun": "bunx --bun vite --mode development",
     "build_test": "vite build --mode test --emptyOutDir",
     "build_pre": "vite build --mode staging --emptyOutDir",
     "build_prod": "vite build --emptyOutDir",

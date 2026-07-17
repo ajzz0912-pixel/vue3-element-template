@@ -17,4 +17,5 @@ import './theme/modules/chinese/index.scss'
 
 /** 权限路由处理主方法 */
 const app = createApp(App)
+app.config.globalProperties.$axios = $axios
 setupPinia(app).use(router).use(globalPlugin).mount('#app')

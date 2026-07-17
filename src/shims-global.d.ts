@@ -92,3 +92,9 @@ declare interface Window {
     axios: import('axios').AxiosStatic
     $$axios: import('./composables/axios').ApiClient
 }
+
+declare module 'vue' {
+    interface ComponentCustomProperties {
+        $axios: import('./composables/axios').ApiClient
+    }
+}

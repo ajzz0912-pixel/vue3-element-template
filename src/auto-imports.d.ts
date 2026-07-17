@@ -371,6 +371,9 @@ declare global {
   // @ts-ignore
   export type { TabsType } from './composables/storage'
   import('./composables/storage')
+  // @ts-ignore
+  export type { UserInfo } from './stores/use-user-store'
+  import('./stores/use-user-store')
 }
 
 // for vue template auto import

@@ -186,4 +186,4 @@ export class ApiClient {
 }
 
 window.$$axios = new ApiClient()
-export const $axios = new ApiClient()
+export const $axios = window.$$axios

@@ -1,5 +1,6 @@
-import type { ConfigEnv } from 'vite'
+import type { ConfigEnv, PluginOption } from 'vite'
 
+import { existsSync } from 'node:fs'
 import path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
@@ -22,6 +23,37 @@ export default defineConfig(async ({ mode, command }: ConfigEnv) => {
     console.log(`当前编译环境: ${process.env.VITE_APP_ENV} | ${command}`)
 
     const isPreRelease = process.env.VITE_APP_ENV === 'pre-release'
+    const fakeDir = path.join(process.cwd(), 'fake')
+    const enableFakeServer = existsSync(fakeDir)
+
+    const plugins: PluginOption[] = [...Macros(), ...Components(), UnoCSS()]
+
+    /**
+     * 本地和生产模拟服务（仅在 fake/ 目录存在时启用）
+     * @see https://github.com/condorheroblog/vite-plugin-fake-server
+     */
+    if (enableFakeServer) {
+        plugins.push(
+            await vitePluginFakeServer({
+                enableProd: isPreRelease,
+                logger: true,
+                headers: { '---------': '----------' },
+            }),
+        )
+    }
+
+    plugins.push(
+        /**
+         * 打包时展示进度条的插件
+         * @see https://github.com/jeddygong/vite-plugin-progress/blob/main/README.zh-CN.md
+         */
+        Progress(),
+        /**
+         * 检查Vite插件的中间状态
+         * @see https://github.com/antfu/vite-plugin-inspect#readme
+         */
+        Inspect(),
+    )
 
     return {
         base: './',
@@ -32,30 +64,7 @@ export default defineConfig(async ({ mode, command }: ConfigEnv) => {
             ...(isPreRelease ? { rolldownOptions: { treeshake: false } } : {}),
         },
         css: Css,
-        plugins: [
-            ...Macros(),
-            ...Components(),
-            UnoCSS(),
-            /**
-             * 本地和生产模拟服务
-             * @see https://github.com/condorheroblog/vite-plugin-fake-server
-             */
-            await vitePluginFakeServer({
-                enableProd: process.env.VITE_APP_ENV === 'pre-release',
-                logger: true,
-                headers: { '---------': '----------' },
-            }),
-            /**
-             * 打包时展示进度条的插件
-             * @see https://github.com/jeddygong/vite-plugin-progress/blob/main/README.zh-CN.md
-             */
-            Progress(),
-            /**
-             * 检查Vite插件的中间状态
-             * @see https://github.com/antfu/vite-plugin-inspect#readme
-             */
-            Inspect(),
-        ],
+        plugins,
         resolve: {
             alias: {
                 '~': path.join(__dirname, './src'),

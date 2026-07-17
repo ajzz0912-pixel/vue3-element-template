@@ -11,11 +11,10 @@ const config: { server: ServerOptions, build: BuildOptions } = {
         host: '0.0.0.0',
         open: true,
         proxy: {
-            // 代理配置
+            // 开发环境接口转发到本地后端（保留 /api 前缀）
             '/api': {
-                target: 'http://127.0.0.1:3000',
+                target: 'http://localhost:3000',
                 changeOrigin: true,
-                rewrite: (path: string) => path.replace(/^\/api/, ''),
             },
         },
         warmup: {

@@ -3,47 +3,72 @@ import type { UserState } from '../types/store.types'
 import { acceptHMRUpdate } from 'pinia'
 import { userStorage } from '~/composables/storage'
 
+export interface UserInfo {
+    id?: number
+    username?: string
+    email?: string
+    avatar?: string
+    role?: string
+    permissions?: string[]
+    [key: string]: any // 允许额外字段
+}
+
+function persistUser(state: UserState) {
+    // 展开成纯对象，避免 reactive Proxy 写入 localStorage 失败
+    userStorage.value = {
+        token: state.token,
+        info: { ...(state.info || {}) },
+    }
+}
+
 const useUserStore = defineStore('userStore', () => {
     const state: UserState = reactive(
         userStorage.value || {
             token: '', // 登录token
-            info: {}, // 用户信息
+            info: {
+                id: 0,
+                username: '',
+                email: '',
+                avatar: '',
+                role: '',
+                permissions: [],
+            } as UserInfo, // 用户信息
         },
     )
 
     function tokenChange(token: string) {
         state.token = token
+        persistUser(state)
     }
-    function infoChange(info: Objable) {
-        state.info = info
+    function setInfo(info: Partial<UserInfo>) {
+        state.info = { ...info }
+        persistUser(state)
     }
 
     // login by login.vue
-    async function login(params: { name: string, password: string }) {
-        const { code, data } = await $axios.post<{ token: string }>(
-            '/user/login',
-            params,
-        )
-        if (code === 200 && data) {
-            await getInfo({ token: data.token })
-            tokenChange(data.token)
-            return data.token
+    async function login(data: { username: string, password: string }) {
+        const res = await $axios.post<UserInfo>('/user/login', data)
+        const { code, token, data: userInfo } = res
+        if (code === 200 && token) {
+            tokenChange(token)
+            setInfo({ ...userInfo })
+            return token as string
         }
         return null
     }
     // get user info after user logined
     async function getInfo(params: { token: string }) {
-        const { code, data } = await $axios.post<any>('/user/info', params)
-        if (code === 200) {
-            infoChange(data.info)
-            return data.info
+        const res = await $axios.post<UserInfo>('/user/info', params)
+        if (res.code === 200 && res.data) {
+            setInfo(res.data)
+            return res.data
         }
         return null
     }
 
     // login out the system after user click the logout button
     async function logout() {
-        await $axios.post('/user/out')
+        await $axios.post('/user/logout')
 
         globalStorage.value = null
         userStorage.value = null
@@ -54,15 +79,15 @@ const useUserStore = defineStore('userStore', () => {
     return {
         ...toRefs(state),
         tokenChange,
-        infoChange,
+        setInfo,
         login,
         getInfo,
         logout,
     }
 })
 
-useUserStore(piniaInit).$subscribe((_mutation, state) => {
-    userStorage.value = state
+useUserStore(piniaInit).$subscribe((_mutation: unknown, state: UserState) => {
+    persistUser(state)
 })
 
 export default useUserStore

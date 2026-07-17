@@ -22,6 +22,7 @@
     "Slot": true,
     "Slots": true,
     "TabsType": true,
+    "UserInfo": true,
     "VNode": true,
     "WritableComputedRef": true,
     "activeCategoryKey": true,
