@@ -16,7 +16,8 @@
     "lint:fix": "eslint . --fix",
     "lint:ts": "vue-tsc -b --noEmit",
     "lint:css": "stylelint '**/*.{css,scss}' --fix",
-    "copy": "deploy_dist vite-vue3-admin"
+    "copy": "deploy_dist vite-vue3-admin",
+    "prepare": "husky"
   },
   "dependencies": {
     "@lincy/async-validation": "catalog:prod",
@@ -36,6 +37,8 @@
     "xlsx": "catalog:prod"
   },
   "devDependencies": {
+    "@commitlint/cli": "catalog:",
+    "@commitlint/config-conventional": "catalog:",
     "@iconify-json/ant-design": "catalog:icons",
     "@iconify-json/el": "catalog:icons",
     "@iconify-json/ep": "catalog:icons",
@@ -58,6 +61,7 @@
     "cross-env": "catalog:dev",
     "eslint": "catalog:lint",
     "eslint-plugin-format": "catalog:lint",
+    "husky": "catalog:",
     "sass-embedded": "catalog:dev",
     "stylelint": "catalog:lint",
     "typescript": "catalog:dev",

@@ -82,7 +82,7 @@
 import type { GlobalDialogLayer, GlobalTablePage } from '~/types/components.types'
 import type { GlobalTableInstance } from '~/types/global.types'
 
-import type { IUpdatePage, ITableList } from '~/types/table.types'
+import type { ITableList, IUpdatePage } from '~/types/table.types'
 import globalTable from '~/components/global-table.vue'
 
 import { ElMessage } from '~/config/element'

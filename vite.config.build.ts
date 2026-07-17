@@ -7,22 +7,22 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const config: { server: ServerOptions, build: BuildOptions } = {
     server: {
-        port: 3101,
+        port: 8081,
         host: '0.0.0.0',
         open: true,
         proxy: {
             // 代理配置
             '/api': {
-                target: 'http://127.0.0.1:3101',
+                target: 'http://127.0.0.1:3000',
                 changeOrigin: true,
-                rewrite: (path: string) => path.replace(/^\/api/, '/mock'),
+                rewrite: (path: string) => path.replace(/^\/api/, ''),
             },
         },
         warmup: {
             clientFiles: ['./src/main.ts', './src/views/**/*.vue'],
         },
         hmr: {
-            port: 53101,
+            port: 8081,
         },
     },
     build: {
@@ -46,12 +46,6 @@ const config: { server: ServerOptions, build: BuildOptions } = {
                     if (id.includes('__uno.css')) {
                         return 'unocss'
                     }
-                    //     // 处理js分块
-                    //     if (id.includes('.js') || id.includes('.mjs') || id.includes('.cjs')) {
-                    //         if (id.includes('node_modules'))
-                    //             return 'vendor'
-                    //         return 'main'
-                    //     }
                 },
             },
         },
